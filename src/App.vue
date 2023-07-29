@@ -88,6 +88,12 @@ watch(
   },
   { deep: true }
 );
+
+const resetData = () => {
+  weights.value = [];
+  updateChartData();
+  localStorage.removeItem("weights");
+};
 </script>
 
 <template>
@@ -123,5 +129,6 @@ watch(
         </ul>
       </div>
     </div>
+    <button @click="resetData" class="reset-btn">Reset Data</button>
   </main>
 </template>
