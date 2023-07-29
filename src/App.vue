@@ -26,5 +26,10 @@ const addWeight = () => {
       <span>{{ currentWeight.weight }}</span>
       <small>Current Weight (kg)</small>
     </div>
+
+    <form @submit.prevent="addWeight">
+      <input type="number" step="0.1" v-model="weightInput" />
+      <input type="submit" value="Add weight" />
+    </form>
   </main>
 </template>
