@@ -11,58 +11,80 @@ const currentWeight = computed(() => {
 });
 
 const addWeight = () => {
-  weights.value.push({
+  const newWeight = {
     weight: weightInput.value,
     date: new Date().getTime(),
+  };
+
+  weights.value.push(newWeight);
+
+  updateChartData();
+};
+
+const updateChartData = () => {
+  const ws = [...weights.value];
+
+  if (weightChart.value) {
+    weightChart.value.data.labels = ws
+      .sort((a, b) => a.date - b.date)
+      .map((weight) => new Date(weight.date).toLocaleDateString())
+      .slice(-7);
+
+    weightChart.value.data.datasets[0].data = ws
+      .sort((a, b) => a.date - b.date)
+      .map((weight) => weight.weight)
+      .slice(-7);
+
+    weightChart.value.update();
+    return;
+  }
+
+  nextTick(() => {
+    weightChart.value = new Chart(weightChartEl.value.getContext("2d"), {
+      type: "line",
+      data: {
+        labels: ws
+          .sort((a, b) => a.date - b.date)
+          .map((weight) => new Date(weight.date).toLocaleDateString()),
+        datasets: [
+          {
+            label: "Weight",
+            data: ws
+              .sort((a, b) => a.date - b.date)
+              .map((weight) => weight.weight),
+            backgroundColor: "rgba(255, 105, 180, 0.2)",
+            borderColor: "rgba(255, 105, 180, 1)",
+            borderWidth: 1,
+            fill: true,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+      },
+    });
   });
 };
 
+const saveWeightsToLocalStorage = () => {
+  localStorage.setItem("weights", JSON.stringify(weights.value));
+};
+
+const getWeightsFromLocalStorage = () => {
+  const savedWeights = localStorage.getItem("weights");
+  if (savedWeights) {
+    weights.value = JSON.parse(savedWeights);
+    updateChartData();
+  }
+};
+
+getWeightsFromLocalStorage();
+
 watch(
   weights,
-  (newWeights) => {
-    const ws = [...newWeights];
-
-    if (weightChart.value) {
-      weightChart.value.data.labels = ws
-        .sort((a, b) => a.date - b.date)
-        .map((weight) => new Date(weight.date).toLocaleDateString())
-        .slice(-7);
-
-      weightChart.value.data.datasets[0].data = ws
-        .sort((a, b) => a.date - b.date)
-        .map((weight) => weight.weight)
-        .slice(-7);
-
-      weightChart.value.update();
-      return;
-    }
-
-    nextTick(() => {
-      weightChart.value = new Chart(weightChartEl.value.getContext("2d"), {
-        type: "line",
-        data: {
-          labels: ws
-            .sort((a, b) => a.date - b.date)
-            .map((weight) => new Date(weight.date).toLocaleDateString()),
-          datasets: [
-            {
-              label: "Weight",
-              data: ws
-                .sort((a, b) => a.date - b.date)
-                .map((weight) => weight.weight),
-              backgroundColor: "rgba(255, 105, 180, 0.2)",
-              borderColor: "rgba(255, 105, 180, 1)",
-              borderWidth: 1,
-              fill: true,
-            },
-          ],
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-        },
-      });
-    });
+  () => {
+    saveWeightsToLocalStorage();
   },
   { deep: true }
 );
